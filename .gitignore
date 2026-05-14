@@ -1,0 +1,20 @@
+# Local config files
+.env
+app/config/database.local.php
+
+# Uploaded files
+public/uploads/resumes/*
+public/uploads/profile_pics/*
+public/uploads/logos/*
+
+# Keep upload folders
+!public/uploads/resumes/.gitkeep
+!public/uploads/profile_pics/.gitkeep
+!public/uploads/logos/.gitkeep
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# VS Code
+.vscode/
