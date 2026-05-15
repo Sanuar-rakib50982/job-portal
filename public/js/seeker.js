@@ -53,6 +53,9 @@ document.addEventListener("DOMContentLoaded", function () {
                             ${featuredBadge}
 
                             <a class="btn" href="job_details.php?id=${job.id}">View Details</a>
+<button type="button" class="btn btn-secondary save-job-btn" data-job-id="${job.id}">
+    ${job.is_saved ? "Unsave Job" : "Save Job"}
+</button>
                         </div>
                     `;
                 });
@@ -98,4 +101,40 @@ document.addEventListener("DOMContentLoaded", function () {
             loadJobs();
         });
     }
+});
+
+document.addEventListener("click", function (event) {
+    if (!event.target.classList.contains("save-job-btn")) {
+        return;
+    }
+
+    const button = event.target;
+    const jobId = button.getAttribute("data-job-id");
+
+    if (!jobId) {
+        alert("Invalid job ID.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("job_id", jobId);
+
+    fetch("../../../api/seeker/save_job.php", {
+        method: "POST",
+        body: formData
+    })
+    .then(function (response) {
+        return response.json();
+    })
+    .then(function (data) {
+        if (data.success) {
+            button.textContent = data.button_text;
+            alert(data.message);
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(function () {
+        alert("Something went wrong while saving the job.");
+    });
 });
