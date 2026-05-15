@@ -190,4 +190,98 @@ public function getJobById($jobId) {
 
     return $stmt->get_result()->fetch_assoc();
 }
+public function getProfileResume($userId) {
+    $sql = "SELECT resume_path FROM seeker_profiles WHERE user_id = ?";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+
+    $result = $stmt->get_result()->fetch_assoc();
+
+    return $result['resume_path'] ?? null;
+}
+
+public function hasAlreadyApplied($jobId, $seekerId) {
+    $sql = "SELECT id FROM applications WHERE job_id = ? AND seeker_id = ?";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("ii", $jobId, $seekerId);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+
+    return $result->num_rows > 0;
+}
+
+public function applyToJob($jobId, $seekerId, $recruiterId, $coverLetter, $resumePath) {
+    if ($recruiterId === null || $recruiterId === "" || $recruiterId == 0) {
+        $sql = "INSERT INTO applications (job_id, seeker_id, recruiter_id, cover_letter, resume_path)
+                VALUES (?, ?, NULL, ?, ?)";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("iiss", $jobId, $seekerId, $coverLetter, $resumePath);
+    } else {
+        $sql = "INSERT INTO applications (job_id, seeker_id, recruiter_id, cover_letter, resume_path)
+                VALUES (?, ?, ?, ?, ?)";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("iiiss", $jobId, $seekerId, $recruiterId, $coverLetter, $resumePath);
+    }
+
+    return $stmt->execute();
+}
+
+public function getMyApplications($seekerId) {
+    $sql = "SELECT applications.id, applications.cover_letter, applications.resume_path,
+                   applications.status, applications.applied_at,
+                   jobs.title, jobs.location, jobs.job_type, jobs.experience_level,
+                   jobs.salary_min, jobs.salary_max,
+                   employer.name AS employer_name,
+                   recruiter.name AS recruiter_name
+            FROM applications
+            INNER JOIN jobs ON applications.job_id = jobs.id
+            LEFT JOIN users AS employer ON jobs.employer_id = employer.id
+            LEFT JOIN users AS recruiter ON applications.recruiter_id = recruiter.id
+            WHERE applications.seeker_id = ?
+            ORDER BY applications.applied_at DESC";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("i", $seekerId);
+    $stmt->execute();
+
+    return $stmt->get_result();
+}
+
+public function getApplicationById($applicationId, $seekerId) {
+    $sql = "SELECT applications.*, jobs.title
+            FROM applications
+            INNER JOIN jobs ON applications.job_id = jobs.id
+            WHERE applications.id = ? AND applications.seeker_id = ?";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("ii", $applicationId, $seekerId);
+    $stmt->execute();
+
+    return $stmt->get_result()->fetch_assoc();
+}
+
+public function withdrawApplication($applicationId, $seekerId) {
+    $application = $this->getApplicationById($applicationId, $seekerId);
+
+    if (!$application) {
+        return "not_found";
+    }
+
+    if ($application['status'] !== 'submitted') {
+        return "not_allowed";
+    }
+
+    $sql = "UPDATE applications 
+            SET status = 'withdrawn'
+            WHERE id = ? AND seeker_id = ?";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("ii", $applicationId, $seekerId);
+
+    return $stmt->execute();
+}
 }
