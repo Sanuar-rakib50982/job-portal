@@ -284,4 +284,74 @@ public function withdrawApplication($applicationId, $seekerId) {
 
     return $stmt->execute();
 }
+public function isJobSaved($jobId, $seekerId) {
+    $sql = "SELECT id FROM saved_jobs WHERE job_id = ? AND seeker_id = ?";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("ii", $jobId, $seekerId);
+    $stmt->execute();
+
+    $result = $stmt->get_result();
+
+    return $result->num_rows > 0;
+}
+
+public function saveJob($jobId, $seekerId) {
+    if ($this->isJobSaved($jobId, $seekerId)) {
+        return "already_saved";
+    }
+
+    $sql = "INSERT INTO saved_jobs (job_id, seeker_id) VALUES (?, ?)";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("ii", $jobId, $seekerId);
+
+    return $stmt->execute();
+}
+
+public function unsaveJob($jobId, $seekerId) {
+    $sql = "DELETE FROM saved_jobs WHERE job_id = ? AND seeker_id = ?";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("ii", $jobId, $seekerId);
+
+    return $stmt->execute();
+}
+
+public function toggleSavedJob($jobId, $seekerId) {
+    if ($this->isJobSaved($jobId, $seekerId)) {
+        if ($this->unsaveJob($jobId, $seekerId)) {
+            return "unsaved";
+        }
+
+        return false;
+    }
+
+    if ($this->saveJob($jobId, $seekerId)) {
+        return "saved";
+    }
+
+    return false;
+}
+
+public function getSavedJobs($seekerId) {
+    $sql = "SELECT saved_jobs.id AS saved_id, saved_jobs.saved_at,
+                   jobs.id AS job_id, jobs.title, jobs.description,
+                   jobs.salary_min, jobs.salary_max, jobs.location,
+                   jobs.job_type, jobs.experience_level, jobs.deadline,
+                   jobs.is_featured, jobs.created_at,
+                   categories.name AS category_name,
+                   employer.name AS employer_name,
+                   recruiter.name AS recruiter_name
+            FROM saved_jobs
+            INNER JOIN jobs ON saved_jobs.job_id = jobs.id
+            LEFT JOIN categories ON jobs.category_id = categories.id
+            LEFT JOIN users AS employer ON jobs.employer_id = employer.id
+            LEFT JOIN users AS recruiter ON jobs.recruiter_id = recruiter.id
+            WHERE saved_jobs.seeker_id = ?
+            ORDER BY saved_jobs.saved_at DESC";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("i", $seekerId);
+    $stmt->execute();
+
+    return $stmt->get_result();
+}
 }
