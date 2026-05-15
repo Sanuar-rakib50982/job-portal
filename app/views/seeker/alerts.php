@@ -7,7 +7,7 @@ require_once "../../controllers/SeekerController.php";
 
 $seeker = new SeekerController($conn);
 
-$userId = $_SESSION['user_id'];
+$seekerId = $_SESSION['user_id'];
 $categories = $seeker->getCategories();
 
 $message = "";
@@ -25,7 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         if (empty($keyword) && empty($categoryId) && empty($location) && empty($jobType)) {
             $error = "Please provide at least one alert condition.";
         } else {
-            if ($seeker->createJobAlert($userId, $keyword, $categoryId, $location, $jobType)) {
+            if ($seeker->createJobAlert($seekerId, $keyword, $categoryId, $location, $jobType)) {
                 $message = "Job alert created successfully.";
             } else {
                 $error = "Failed to create job alert.";
@@ -36,7 +36,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if ($action === "delete") {
         $alertId = isset($_POST['alert_id']) ? (int)$_POST['alert_id'] : 0;
 
-        if ($alertId > 0 && $seeker->deleteJobAlert($alertId, $userId)) {
+        if ($alertId > 0 && $seeker->deleteJobAlert($alertId, $seekerId)) {
             $message = "Job alert deleted successfully.";
         } else {
             $error = "Failed to delete job alert.";
@@ -44,7 +44,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
-$alerts = $seeker->getJobAlerts($userId);
+$alerts = $seeker->getJobAlerts($seekerId);
 ?>
 
 <!DOCTYPE html>

@@ -354,46 +354,46 @@ public function getSavedJobs($seekerId) {
 
     return $stmt->get_result();
 }
-public function createJobAlert($userId, $keyword, $categoryId, $location, $jobType) {
+public function createJobAlert($seekerId, $keyword, $categoryId, $location, $jobType) {
     if ($categoryId === "" || $categoryId == 0) {
         $categoryId = null;
     }
 
     if ($categoryId === null) {
-        $sql = "INSERT INTO job_alerts (user_id, keyword, category_id, location, job_type)
+        $sql = "INSERT INTO job_alerts (seeker_id, keyword, category_id, location, job_type)
                 VALUES (?, ?, NULL, ?, ?)";
 
         $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("isss", $userId, $keyword, $location, $jobType);
+        $stmt->bind_param("isss", $seekerId, $keyword, $location, $jobType);
     } else {
-        $sql = "INSERT INTO job_alerts (user_id, keyword, category_id, location, job_type)
+        $sql = "INSERT INTO job_alerts (seeker_id, keyword, category_id, location, job_type)
                 VALUES (?, ?, ?, ?, ?)";
 
         $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("isiss", $userId, $keyword, $categoryId, $location, $jobType);
+        $stmt->bind_param("isiss", $seekerId, $keyword, $categoryId, $location, $jobType);
     }
 
     return $stmt->execute();
 }
 
-public function getJobAlerts($userId) {
+public function getJobAlerts($seekerId) {
     $sql = "SELECT job_alerts.*, categories.name AS category_name
             FROM job_alerts
             LEFT JOIN categories ON job_alerts.category_id = categories.id
-            WHERE job_alerts.user_id = ?
+            WHERE job_alerts.seeker_id = ?
             ORDER BY job_alerts.created_at DESC";
 
     $stmt = $this->conn->prepare($sql);
-    $stmt->bind_param("i", $userId);
+    $stmt->bind_param("i", $seekerId);
     $stmt->execute();
 
     return $stmt->get_result();
 }
 
-public function deleteJobAlert($alertId, $userId) {
-    $sql = "DELETE FROM job_alerts WHERE id = ? AND user_id = ?";
+public function deleteJobAlert($alertId, $seekerId) {
+    $sql = "DELETE FROM job_alerts WHERE id = ? AND seeker_id = ?";
     $stmt = $this->conn->prepare($sql);
-    $stmt->bind_param("ii", $alertId, $userId);
+    $stmt->bind_param("ii", $alertId, $seekerId);
 
     return $stmt->execute();
 }
