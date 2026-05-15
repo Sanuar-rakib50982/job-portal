@@ -285,7 +285,7 @@ public function withdrawApplication($applicationId, $seekerId) {
     return $stmt->execute();
 }
 public function isJobSaved($jobId, $seekerId) {
-    $sql = "SELECT id FROM saved_jobs WHERE job_id = ? AND seeker_id = ?";
+    $sql = "SELECT id FROM saved_jobs WHERE job_id = ? AND user_id = ?";
     $stmt = $this->conn->prepare($sql);
     $stmt->bind_param("ii", $jobId, $seekerId);
     $stmt->execute();
@@ -300,7 +300,7 @@ public function saveJob($jobId, $seekerId) {
         return "already_saved";
     }
 
-    $sql = "INSERT INTO saved_jobs (job_id, seeker_id) VALUES (?, ?)";
+    $sql = "INSERT INTO saved_jobs (job_id, user_id) VALUES (?, ?)";
     $stmt = $this->conn->prepare($sql);
     $stmt->bind_param("ii", $jobId, $seekerId);
 
@@ -308,7 +308,7 @@ public function saveJob($jobId, $seekerId) {
 }
 
 public function unsaveJob($jobId, $seekerId) {
-    $sql = "DELETE FROM saved_jobs WHERE job_id = ? AND seeker_id = ?";
+    $sql = "DELETE FROM saved_jobs WHERE job_id = ? AND user_id = ?";
     $stmt = $this->conn->prepare($sql);
     $stmt->bind_param("ii", $jobId, $seekerId);
 
@@ -345,7 +345,7 @@ public function getSavedJobs($seekerId) {
             LEFT JOIN categories ON jobs.category_id = categories.id
             LEFT JOIN users AS employer ON jobs.employer_id = employer.id
             LEFT JOIN users AS recruiter ON jobs.recruiter_id = recruiter.id
-            WHERE saved_jobs.seeker_id = ?
+            WHERE saved_jobs.user_id = ?
             ORDER BY saved_jobs.saved_at DESC";
 
     $stmt = $this->conn->prepare($sql);
