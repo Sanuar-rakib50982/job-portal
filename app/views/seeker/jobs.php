@@ -9,6 +9,7 @@ $seeker = new SeekerController($conn);
 
 $categories = $seeker->getCategories();
 $jobs = $seeker->getFilteredJobs();
+$seekerId = $_SESSION['user_id'];
 ?>
 
 <!DOCTYPE html>
@@ -115,6 +116,16 @@ $jobs = $seeker->getFilteredJobs();
                             <br><br>
 
                             <a class="btn" href="job_details.php?id=<?php echo $job['id']; ?>">View Details</a>
+                            <?php 
+$isSaved = $seeker->isJobSaved($job['id'], $seekerId);
+?>
+
+<button 
+    type="button" 
+    class="btn btn-secondary save-job-btn" 
+    data-job-id="<?php echo $job['id']; ?>">
+    <?php echo $isSaved ? "Unsave Job" : "Save Job"; ?>
+</button>
                         </div>
                     <?php } ?>
                 <?php } else { ?>
