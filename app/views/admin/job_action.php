@@ -46,6 +46,5 @@ if ($action === "activate") {
     header("Location: jobs.php?error=Failed to reactivate job");
     exit;
 }
-
 header("Location: jobs.php?error=Unknown action");
 exit;
