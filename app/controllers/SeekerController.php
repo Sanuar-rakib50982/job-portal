@@ -354,4 +354,136 @@ public function getSavedJobs($seekerId) {
 
     return $stmt->get_result();
 }
+public function createJobAlert($userId, $keyword, $categoryId, $location, $jobType) {
+    if ($categoryId === "" || $categoryId == 0) {
+        $categoryId = null;
+    }
+
+    if ($categoryId === null) {
+        $sql = "INSERT INTO job_alerts (user_id, keyword, category_id, location, job_type)
+                VALUES (?, ?, NULL, ?, ?)";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("isss", $userId, $keyword, $location, $jobType);
+    } else {
+        $sql = "INSERT INTO job_alerts (user_id, keyword, category_id, location, job_type)
+                VALUES (?, ?, ?, ?, ?)";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("isiss", $userId, $keyword, $categoryId, $location, $jobType);
+    }
+
+    return $stmt->execute();
+}
+
+public function getJobAlerts($userId) {
+    $sql = "SELECT job_alerts.*, categories.name AS category_name
+            FROM job_alerts
+            LEFT JOIN categories ON job_alerts.category_id = categories.id
+            WHERE job_alerts.user_id = ?
+            ORDER BY job_alerts.created_at DESC";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+
+    return $stmt->get_result();
+}
+
+public function deleteJobAlert($alertId, $userId) {
+    $sql = "DELETE FROM job_alerts WHERE id = ? AND user_id = ?";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("ii", $alertId, $userId);
+
+    return $stmt->execute();
+}
+
+public function getRecruiterOutreach($seekerId) {
+    $sql = "SELECT recruiter_outreach.id, recruiter_outreach.message,
+                   recruiter_outreach.status, recruiter_outreach.sent_at,
+                   recruiter.name AS recruiter_name,
+                   recruiter.email AS recruiter_email,
+                   jobs.title AS job_title,
+                   jobs.id AS job_id
+            FROM recruiter_outreach
+            INNER JOIN users AS recruiter ON recruiter_outreach.recruiter_id = recruiter.id
+            LEFT JOIN jobs ON recruiter_outreach.job_id = jobs.id
+            WHERE recruiter_outreach.seeker_id = ?
+            ORDER BY recruiter_outreach.sent_at DESC";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("i", $seekerId);
+    $stmt->execute();
+
+    return $stmt->get_result();
+}
+
+public function updateOutreachStatus($outreachId, $seekerId, $status) {
+    $allowedStatuses = ['sent', 'read', 'responded'];
+
+    if (!in_array($status, $allowedStatuses)) {
+        return false;
+    }
+
+    $sql = "UPDATE recruiter_outreach
+            SET status = ?
+            WHERE id = ? AND seeker_id = ?";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("sii", $status, $outreachId, $seekerId);
+
+    return $stmt->execute();
+}
+
+public function getReceivedMessages($userId) {
+    $sql = "SELECT messages.id, messages.body, messages.sent_at, messages.is_read,
+                   messages.application_id,
+                   sender.name AS sender_name,
+                   sender.email AS sender_email,
+                   sender.role AS sender_role,
+                   sender.id AS sender_id,
+                   jobs.title AS job_title
+            FROM messages
+            INNER JOIN users AS sender ON messages.sender_id = sender.id
+            LEFT JOIN applications ON messages.application_id = applications.id
+            LEFT JOIN jobs ON applications.job_id = jobs.id
+            WHERE messages.recipient_id = ?
+            ORDER BY messages.sent_at DESC";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+
+    return $stmt->get_result();
+}
+
+public function markMessageAsRead($messageId, $userId) {
+    $sql = "UPDATE messages 
+            SET is_read = 1
+            WHERE id = ? AND recipient_id = ?";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("ii", $messageId, $userId);
+
+    return $stmt->execute();
+}
+
+public function sendMessage($senderId, $recipientId, $applicationId, $body) {
+    if ($applicationId === null || $applicationId === "" || $applicationId == 0) {
+        $sql = "INSERT INTO messages (sender_id, recipient_id, application_id, body, sent_at, is_read)
+                VALUES (?, ?, NULL, ?, NOW(), 0)";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("iis", $senderId, $recipientId, $body);
+    } else {
+        $sql = "INSERT INTO messages (sender_id, recipient_id, application_id, body, sent_at, is_read)
+                VALUES (?, ?, ?, ?, NOW(), 0)";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("iiis", $senderId, $recipientId, $applicationId, $body);
+    }
+
+    return $stmt->execute();
+}
+
 }
