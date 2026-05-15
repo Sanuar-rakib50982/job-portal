@@ -485,5 +485,52 @@ public function sendMessage($senderId, $recipientId, $applicationId, $body) {
 
     return $stmt->execute();
 }
+public function getComplaintSubjectUsers() {
+    $sql = "SELECT id, name, email, role 
+            FROM users 
+            WHERE role IN ('employer', 'recruiter', 'admin')
+            ORDER BY role ASC, name ASC";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute();
+
+    return $stmt->get_result();
+}
+
+public function submitComplaint($submitterId, $subjectId, $description) {
+    if ($subjectId === null || $subjectId === "" || $subjectId == 0) {
+        $sql = "INSERT INTO complaints (submitter_id, subject_id, description, status)
+                VALUES (?, NULL, ?, 'open')";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("is", $submitterId, $description);
+    } else {
+        $sql = "INSERT INTO complaints (submitter_id, subject_id, description, status)
+                VALUES (?, ?, ?, 'open')";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("iis", $submitterId, $subjectId, $description);
+    }
+
+    return $stmt->execute();
+}
+
+public function getMyComplaints($submitterId) {
+    $sql = "SELECT complaints.id, complaints.description, complaints.status,
+                   complaints.admin_note, complaints.created_at,
+                   subject.name AS subject_name,
+                   subject.email AS subject_email,
+                   subject.role AS subject_role
+            FROM complaints
+            LEFT JOIN users AS subject ON complaints.subject_id = subject.id
+            WHERE complaints.submitter_id = ?
+            ORDER BY complaints.created_at DESC";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("i", $submitterId);
+    $stmt->execute();
+
+    return $stmt->get_result();
+}
 
 }
