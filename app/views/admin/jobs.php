@@ -40,10 +40,10 @@ $error = $_GET['error'] ?? "";
         }
 
         .sidebar {
-            width: 230px;
+            width: 231px;
             background: #111827;
             color: white;
-            padding: 20px;
+            padding: 21px;
         }
 
         .sidebar h2 {
