@@ -15,6 +15,8 @@ if ($jobId <= 0) {
 }
 
 $job = $seeker->getJobById($jobId);
+$seekerId = $_SESSION['user_id'];
+$isSaved = $seeker->isJobSaved($jobId, $seekerId);
 
 if (!$job) {
     header("Location: jobs.php");
@@ -84,9 +86,17 @@ if (!$job) {
         </div>
 
         <a href="apply.php?job_id=<?php echo $job['id']; ?>" class="btn">Apply Now</a>
-        <a href="jobs.php" class="btn btn-secondary">Back to Jobs</a>
+
+<button 
+    type="button" 
+    class="btn btn-secondary save-job-btn" 
+    data-job-id="<?php echo $job['id']; ?>">
+    <?php echo $isSaved ? "Unsave Job" : "Save Job"; ?>
+</button>
+
+<a href="jobs.php" class="btn btn-secondary">Back to Jobs</a>
     </main>
 </div>
-
+<script src="../../../public/js/seeker.js"></script>
 </body>
 </html>
