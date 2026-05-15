@@ -26,6 +26,7 @@ $recentComplaints = $admin->getRecentComplaints();
 <head>
     <title>Admin Dashboard - Job Portal</title>
     <link rel="stylesheet" href="../../../public/css/style.css">
+    <link rel="stylesheet" href="../../../public/css/admin.css">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -148,15 +149,18 @@ $recentComplaints = $admin->getRecentComplaints();
 
 <div class="admin-wrapper">
 
-    <div class="sidebar">
-        <h2>Admin Panel</h2>
-        <a href="dashboard.php">Dashboard</a>
-        <a href="users.php">Manage Users</a>
-        <a href="categories.php">Categories</a>
-        <a href="jobs.php">Jobs</a>
-        <a href="complaints.php">Complaints</a>
-        <a href="../../../logout.php">Logout</a>
-    </div>
+   <div class="sidebar">
+    <h2>Admin Panel</h2>
+    <a href="dashboard.php">Dashboard</a>
+    <a href="users.php">Manage Users</a>
+    <a href="categories.php">Categories</a>
+    <a href="jobs.php">Jobs</a>
+    <a href="complaints.php">Complaints</a>
+    <a href="policies.php">Policies</a>
+    <a href="announcements.php">Announcements</a>
+    <a href="analytics.php">Analytics</a>
+    <a href="../../../logout.php">Logout</a>
+</div>
 
     <div class="main-content">
         <h1 class="page-title">Admin Dashboard</h1>
