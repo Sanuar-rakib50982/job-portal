@@ -36,6 +36,8 @@ $jobsResult = $seeker->getFilteredJobs(
 
 $jobs = [];
 
+$seekerId = $_SESSION['user_id'];
+
 while ($job = $jobsResult->fetch_assoc()) {
     $jobs[] = [
         "id" => $job['id'],
@@ -49,7 +51,8 @@ while ($job = $jobsResult->fetch_assoc()) {
         "salary_min" => $job['salary_min'],
         "salary_max" => $job['salary_max'],
         "deadline" => $job['deadline'],
-        "is_featured" => $job['is_featured']
+        "is_featured" => $job['is_featured'],
+        "is_saved" => $seeker->isJobSaved($job['id'], $seekerId)
     ];
 }
 
