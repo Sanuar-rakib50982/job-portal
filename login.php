@@ -47,29 +47,64 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login - Job Portal</title>
-    <link rel="stylesheet" href="public/css/style.css">
+    <title>Login - CareerBridge</title>
+    <link rel="stylesheet" href="public/css/auth.css">
 </head>
-<body>
+<body class="auth-page">
 
-<h1>Login</h1>
+<nav class="navbar">
+    <a href="index.php" class="brand">
+        <span class="brand-mark">CB</span>
+        <span>CareerBridge</span>
+    </a>
 
-<?php if (!empty($error)) { ?>
-    <p style="color:red;"><?php echo $error; ?></p>
-<?php } ?>
+    <div class="nav-links">
+        <a href="index.php">Home</a>
+        <a href="register.php" class="nav-btn">Register</a>
+    </div>
+</nav>
 
-<form method="POST" action="">
-    <label>Email</label>
-    <input type="email" name="email" required>
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <h1>Welcome Back</h1>
+        <p>Login to access your CareerBridge dashboard.</p>
 
-    <label>Password</label>
-    <input type="password" name="password" required>
+        <?php
+        $displayError = $error ?? $loginError ?? "";
+        $displaySuccess = $success ?? "";
+        ?>
 
-    <button type="submit">Login</button>
-</form>
+        <?php if (!empty($displayError)) { ?>
+            <div class="alert-error"><?php echo htmlspecialchars($displayError); ?></div>
+        <?php } ?>
 
-<a href="register.php">Create new account</a>
-<a href="index.php">Back to Home</a>
+        <?php if (!empty($displaySuccess)) { ?>
+            <div class="alert-success"><?php echo htmlspecialchars($displaySuccess); ?></div>
+        <?php } ?>
+
+        <form method="POST" action="">
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" name="email" placeholder="Enter your email" required>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" placeholder="Enter your password" required>
+            </div>
+
+            <button type="submit" class="auth-submit">Login</button>
+        </form>
+
+        <div class="auth-footer">
+            New to CareerBridge? <a href="register.php">Create an account</a>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    © <?php echo date('Y'); ?> CareerBridge Job Portal.
+</footer>
 
 </body>
 </html>
