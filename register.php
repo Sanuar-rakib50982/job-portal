@@ -6,20 +6,27 @@ require_once "app/models/User.php";
 $error = "";
 $success = "";
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $name = trim($_POST["name"]);
-    $email = trim($_POST["email"]);
-    $phone = trim($_POST["phone"]);
-    $password = $_POST["password"];
-    $role = $_POST["role"];
+$name = "";
+$email = "";
+$phone = "";
+$role = "";
 
-    if (empty($name) || empty($email) || empty($password) || empty($role)) {
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $name = trim($_POST["name"] ?? "");
+    $email = trim($_POST["email"] ?? "");
+    $phone = trim($_POST["phone"] ?? "");
+    $password = $_POST["password"] ?? "";
+    $role = trim($_POST["role"] ?? "");
+
+    if (empty($name) || empty($email) || empty($phone) || empty($password) || empty($role)) {
         $error = "Please fill in all required fields.";
+    } elseif (!preg_match('/^[0-9]{11}$/', $phone)) {
+        $error = "Phone number must be exactly 11 digits and contain only numbers.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = "Please enter a valid email address.";
     } elseif (strlen($password) < 6) {
         $error = "Password must be at least 6 characters.";
-    } elseif (!in_array($role, ['seeker', 'employer', 'recruiter'])) {
+    } elseif (!in_array($role, ['seeker', 'employer', 'recruiter'], true)) {
         $error = "Invalid role selected.";
     } else {
         $userModel = new User($conn);
@@ -29,6 +36,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         } else {
             if ($userModel->register($name, $email, $phone, $password, $role)) {
                 $success = "Registration successful. You can now login.";
+
+                $name = "";
+                $email = "";
+                $phone = "";
+                $role = "";
             } else {
                 $error = "Registration failed. Please try again.";
             }
@@ -63,8 +75,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <p>Join CareerBridge as a job seeker, employer, or recruiter.</p>
 
         <?php
-        $displayError = $error ?? $registerError ?? "";
-        $displaySuccess = $success ?? $message ?? "";
+        $displayError = $error ?? "";
+        $displaySuccess = $success ?? "";
         ?>
 
         <?php if (!empty($displayError)) { ?>
@@ -78,32 +90,58 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         <form method="POST" action="">
             <div class="form-group">
                 <label>Full Name</label>
-                <input type="text" name="name" placeholder="Enter your full name" required>
+                <input 
+                    type="text" 
+                    name="name" 
+                    placeholder="Enter your full name" 
+                    value="<?php echo htmlspecialchars($name); ?>" 
+                    required
+                >
             </div>
 
             <div class="form-group">
                 <label>Email Address</label>
-                <input type="email" name="email" placeholder="Enter your email" required>
+                <input 
+                    type="email" 
+                    name="email" 
+                    placeholder="Enter your email" 
+                    value="<?php echo htmlspecialchars($email); ?>" 
+                    required
+                >
             </div>
 
             <div class="form-group">
                 <label>Phone Number</label>
-                <input type="text" name="phone" placeholder="Enter your phone number">
+                <input 
+                    type="text" 
+                    name="phone" 
+                    placeholder="Example: 01712345678" 
+                    value="<?php echo htmlspecialchars($phone); ?>" 
+                    maxlength="11" 
+                    pattern="[0-9]{11}" 
+                    title="Phone number must be exactly 11 digits and contain only numbers." 
+                    required
+                >
             </div>
 
             <div class="form-group">
                 <label>Select Role</label>
                 <select name="role" required>
                     <option value="">Choose your role</option>
-                    <option value="seeker">Job Seeker</option>
-                    <option value="employer">Employer</option>
-                    <option value="recruiter">Recruiter</option>
+                    <option value="seeker" <?php echo $role === 'seeker' ? 'selected' : ''; ?>>Job Seeker</option>
+                    <option value="employer" <?php echo $role === 'employer' ? 'selected' : ''; ?>>Employer</option>
+                    <option value="recruiter" <?php echo $role === 'recruiter' ? 'selected' : ''; ?>>Recruiter</option>
                 </select>
             </div>
 
             <div class="form-group">
                 <label>Password</label>
-                <input type="password" name="password" placeholder="Create a password" required>
+                <input 
+                    type="password" 
+                    name="password" 
+                    placeholder="Create a password" 
+                    required
+                >
             </div>
 
             <button type="submit" class="auth-submit">Create Account</button>
