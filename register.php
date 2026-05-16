@@ -6,20 +6,27 @@ require_once "app/models/User.php";
 $error = "";
 $success = "";
 
-if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $name = trim($_POST["name"]);
-    $email = trim($_POST["email"]);
-    $phone = trim($_POST["phone"]);
-    $password = $_POST["password"];
-    $role = $_POST["role"];
+$name = "";
+$email = "";
+$phone = "";
+$role = "";
 
-    if (empty($name) || empty($email) || empty($password) || empty($role)) {
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
+    $name = trim($_POST["name"] ?? "");
+    $email = trim($_POST["email"] ?? "");
+    $phone = trim($_POST["phone"] ?? "");
+    $password = $_POST["password"] ?? "";
+    $role = trim($_POST["role"] ?? "");
+
+    if (empty($name) || empty($email) || empty($phone) || empty($password) || empty($role)) {
         $error = "Please fill in all required fields.";
+    } elseif (!preg_match('/^[0-9]{11}$/', $phone)) {
+        $error = "Phone number must be exactly 11 digits and contain only numbers.";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = "Please enter a valid email address.";
     } elseif (strlen($password) < 6) {
         $error = "Password must be at least 6 characters.";
-    } elseif (!in_array($role, ['seeker', 'employer', 'recruiter'])) {
+    } elseif (!in_array($role, ['seeker', 'employer', 'recruiter'], true)) {
         $error = "Invalid role selected.";
     } else {
         $userModel = new User($conn);
@@ -29,6 +36,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         } else {
             if ($userModel->register($name, $email, $phone, $password, $role)) {
                 $success = "Registration successful. You can now login.";
+
+                $name = "";
+                $email = "";
+                $phone = "";
+                $role = "";
             } else {
                 $error = "Registration failed. Please try again.";
             }
@@ -40,47 +52,110 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Register - Job Portal</title>
-    <link rel="stylesheet" href="public/css/style.css">
+    <title>Register - CareerBridge</title>
+    <link rel="stylesheet" href="public/css/auth.css">
 </head>
-<body>
+<body class="auth-page">
 
-<h1>Register</h1>
+<nav class="navbar">
+    <a href="index.php" class="brand">
+        <span class="brand-mark">CB</span>
+        <span>CareerBridge</span>
+    </a>
 
-<?php if (!empty($error)) { ?>
-    <p style="color:red;"><?php echo $error; ?></p>
-<?php } ?>
+    <div class="nav-links">
+        <a href="index.php">Home</a>
+        <a href="login.php" class="nav-btn">Login</a>
+    </div>
+</nav>
 
-<?php if (!empty($success)) { ?>
-    <p style="color:green;"><?php echo $success; ?></p>
-<?php } ?>
+<div class="auth-wrapper">
+    <div class="auth-card large">
+        <h1>Create Account</h1>
+        <p>Join CareerBridge as a job seeker, employer, or recruiter.</p>
 
-<form method="POST" action="">
-    <label>Name</label>
-    <input type="text" name="name" required>
+        <?php
+        $displayError = $error ?? "";
+        $displaySuccess = $success ?? "";
+        ?>
 
-    <label>Email</label>
-    <input type="email" name="email" required>
+        <?php if (!empty($displayError)) { ?>
+            <div class="alert-error"><?php echo htmlspecialchars($displayError); ?></div>
+        <?php } ?>
 
-    <label>Phone</label>
-    <input type="text" name="phone">
+        <?php if (!empty($displaySuccess)) { ?>
+            <div class="alert-success"><?php echo htmlspecialchars($displaySuccess); ?></div>
+        <?php } ?>
 
-    <label>Password</label>
-    <input type="password" name="password" required>
+        <form method="POST" action="">
+            <div class="form-group">
+                <label>Full Name</label>
+                <input 
+                    type="text" 
+                    name="name" 
+                    placeholder="Enter your full name" 
+                    value="<?php echo htmlspecialchars($name); ?>" 
+                    required
+                >
+            </div>
 
-    <label>Role</label>
-    <select name="role" required>
-        <option value="">Select Role</option>
-        <option value="seeker">Job Seeker</option>
-        <option value="employer">Employer</option>
-        <option value="recruiter">Recruiter</option>
-    </select>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input 
+                    type="email" 
+                    name="email" 
+                    placeholder="Enter your email" 
+                    value="<?php echo htmlspecialchars($email); ?>" 
+                    required
+                >
+            </div>
 
-    <button type="submit">Register</button>
-</form>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input 
+                    type="text" 
+                    name="phone" 
+                    placeholder="Example: 01712345678" 
+                    value="<?php echo htmlspecialchars($phone); ?>" 
+                    maxlength="11" 
+                    pattern="[0-9]{11}" 
+                    title="Phone number must be exactly 11 digits and contain only numbers." 
+                    required
+                >
+            </div>
 
-<a href="login.php">Already have an account? Login</a>
-<a href="index.php">Back to Home</a>
+            <div class="form-group">
+                <label>Select Role</label>
+                <select name="role" required>
+                    <option value="">Choose your role</option>
+                    <option value="seeker" <?php echo $role === 'seeker' ? 'selected' : ''; ?>>Job Seeker</option>
+                    <option value="employer" <?php echo $role === 'employer' ? 'selected' : ''; ?>>Employer</option>
+                    <option value="recruiter" <?php echo $role === 'recruiter' ? 'selected' : ''; ?>>Recruiter</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input 
+                    type="password" 
+                    name="password" 
+                    placeholder="Create a password" 
+                    required
+                >
+            </div>
+
+            <button type="submit" class="auth-submit">Create Account</button>
+        </form>
+
+        <div class="auth-footer">
+            Already have an account? <a href="login.php">Login here</a>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    © <?php echo date('Y'); ?> CareerBridge Job Portal.
+</footer>
 
 </body>
 </html>
