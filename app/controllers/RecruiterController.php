@@ -437,5 +437,116 @@ public function getOutreachList($recruiterId) {
 
     return $stmt->get_result();
 }
+public function getSeekersForMessage() {
+    $sql = "SELECT id, name, email, phone
+            FROM users
+            WHERE role = 'seeker'
+            AND is_active = 1
+            ORDER BY name ASC";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute();
+
+    return $stmt->get_result();
+}
+
+public function getRecruiterApplicationsForMessage($recruiterId) {
+    $sql = "SELECT applications.id AS application_id,
+                   users.name AS seeker_name,
+                   users.email AS seeker_email,
+                   jobs.title AS job_title
+            FROM applications
+            INNER JOIN users ON applications.seeker_id = users.id
+            INNER JOIN jobs ON applications.job_id = jobs.id
+            WHERE jobs.recruiter_id = ? OR applications.recruiter_id = ?
+            ORDER BY applications.applied_at DESC";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("ii", $recruiterId, $recruiterId);
+    $stmt->execute();
+
+    return $stmt->get_result();
+}
+
+public function getReceivedMessages($userId) {
+    $sql = "SELECT messages.id,
+                   messages.sender_id,
+                   messages.recipient_id,
+                   messages.application_id,
+                   messages.body,
+                   messages.sent_at,
+                   messages.is_read,
+                   sender.name AS sender_name,
+                   sender.email AS sender_email,
+                   sender.role AS sender_role,
+                   jobs.title AS job_title
+            FROM messages
+            INNER JOIN users AS sender ON messages.sender_id = sender.id
+            LEFT JOIN applications ON messages.application_id = applications.id
+            LEFT JOIN jobs ON applications.job_id = jobs.id
+            WHERE messages.recipient_id = ?
+            ORDER BY messages.sent_at DESC";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+
+    return $stmt->get_result();
+}
+
+public function getSentMessages($userId) {
+    $sql = "SELECT messages.id,
+                   messages.sender_id,
+                   messages.recipient_id,
+                   messages.application_id,
+                   messages.body,
+                   messages.sent_at,
+                   messages.is_read,
+                   recipient.name AS recipient_name,
+                   recipient.email AS recipient_email,
+                   recipient.role AS recipient_role,
+                   jobs.title AS job_title
+            FROM messages
+            INNER JOIN users AS recipient ON messages.recipient_id = recipient.id
+            LEFT JOIN applications ON messages.application_id = applications.id
+            LEFT JOIN jobs ON applications.job_id = jobs.id
+            WHERE messages.sender_id = ?
+            ORDER BY messages.sent_at DESC";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("i", $userId);
+    $stmt->execute();
+
+    return $stmt->get_result();
+}
+
+public function sendMessage($senderId, $recipientId, $applicationId, $body) {
+    if ($applicationId === null || $applicationId === "" || $applicationId == 0) {
+        $sql = "INSERT INTO messages (sender_id, recipient_id, application_id, body, sent_at, is_read)
+                VALUES (?, ?, NULL, ?, NOW(), 0)";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("iis", $senderId, $recipientId, $body);
+    } else {
+        $sql = "INSERT INTO messages (sender_id, recipient_id, application_id, body, sent_at, is_read)
+                VALUES (?, ?, ?, ?, NOW(), 0)";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("iiis", $senderId, $recipientId, $applicationId, $body);
+    }
+
+    return $stmt->execute();
+}
+
+public function markMessageAsRead($messageId, $userId) {
+    $sql = "UPDATE messages 
+            SET is_read = 1
+            WHERE id = ? AND recipient_id = ?";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("ii", $messageId, $userId);
+
+    return $stmt->execute();
+}
 
 }
