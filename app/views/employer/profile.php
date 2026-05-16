@@ -3,7 +3,7 @@ require_once "../../helpers/auth.php";
 requireRole('employer');
 
 require_once "../../config/database.php";
-require_once "../../controllers/employerControllers.php";
+require_once "../../controllers/EmployerController.php";
 
 $employer = new EmployerController($conn);
 
