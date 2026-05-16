@@ -67,26 +67,26 @@ class RecruiterController {
         return $stmt->get_result();
     }
 
-    public function getClients($recruiterId) {
-        $sql = "SELECT recruiter_clients.id,
-                       recruiter_clients.recruiter_id,
-                       recruiter_clients.employer_id,
-                       recruiter_clients.company_name_override,
-                       recruiter_clients.added_at,
-                       users.name AS employer_name,
-                       users.email AS employer_email,
-                       users.phone AS employer_phone
-                FROM recruiter_clients
-                INNER JOIN users ON recruiter_clients.employer_id = users.id
-                WHERE recruiter_clients.recruiter_id = ?
-                ORDER BY recruiter_clients.added_at DESC";
+ public function getClients($recruiterId) {
+    $sql = "SELECT recruiter_clients.id,
+                   recruiter_clients.recruiter_id,
+                   recruiter_clients.employer_id,
+                   recruiter_clients.company_name_override,
+                   recruiter_clients.added_at,
+                   users.name AS employer_name,
+                   users.email AS employer_email,
+                   users.phone AS employer_phone
+            FROM recruiter_clients
+            INNER JOIN users ON recruiter_clients.employer_id = users.id
+            WHERE recruiter_clients.recruiter_id = ?
+            ORDER BY recruiter_clients.added_at DESC";
 
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("i", $recruiterId);
-        $stmt->execute();
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("i", $recruiterId);
+    $stmt->execute();
 
-        return $stmt->get_result();
-    }
+    return $stmt->get_result();
+}
 
     public function getClientById($clientId, $recruiterId) {
         $sql = "SELECT recruiter_clients.id,
