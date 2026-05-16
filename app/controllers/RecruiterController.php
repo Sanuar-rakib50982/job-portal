@@ -365,5 +365,77 @@ public function getSeekerProfileById($seekerId) {
 
     return $stmt->get_result()->fetch_assoc();
 }
+public function getSeekersForOutreach() {
+    $sql = "SELECT users.id, users.name, users.email,
+                   seeker_profiles.headline,
+                   seeker_profiles.skills,
+                   seeker_profiles.preferred_location
+            FROM users
+            LEFT JOIN seeker_profiles ON users.id = seeker_profiles.user_id
+            WHERE users.role = 'seeker'
+            AND users.is_active = 1
+            ORDER BY users.name ASC";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute();
+
+    return $stmt->get_result();
+}
+
+public function getRecruiterActiveJobs($recruiterId) {
+    $sql = "SELECT id, title, location, job_type
+            FROM jobs
+            WHERE recruiter_id = ?
+            AND status = 'active'
+            ORDER BY id DESC";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("i", $recruiterId);
+    $stmt->execute();
+
+    return $stmt->get_result();
+}
+
+public function sendOutreach($recruiterId, $seekerId, $jobId, $message) {
+    if ($jobId === null || $jobId === "" || $jobId == 0) {
+        $sql = "INSERT INTO recruiter_outreach 
+                (recruiter_id, seeker_id, job_id, message, status, sent_at)
+                VALUES (?, ?, NULL, ?, 'sent', NOW())";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("iis", $recruiterId, $seekerId, $message);
+    } else {
+        $sql = "INSERT INTO recruiter_outreach 
+                (recruiter_id, seeker_id, job_id, message, status, sent_at)
+                VALUES (?, ?, ?, ?, 'sent', NOW())";
+
+        $stmt = $this->conn->prepare($sql);
+        $stmt->bind_param("iiis", $recruiterId, $seekerId, $jobId, $message);
+    }
+
+    return $stmt->execute();
+}
+
+public function getOutreachList($recruiterId) {
+    $sql = "SELECT recruiter_outreach.id,
+                   recruiter_outreach.message,
+                   recruiter_outreach.status,
+                   recruiter_outreach.sent_at,
+                   users.name AS seeker_name,
+                   users.email AS seeker_email,
+                   jobs.title AS job_title,
+                   jobs.location AS job_location
+            FROM recruiter_outreach
+            INNER JOIN users ON recruiter_outreach.seeker_id = users.id
+            LEFT JOIN jobs ON recruiter_outreach.job_id = jobs.id
+            WHERE recruiter_outreach.recruiter_id = ?
+            ORDER BY recruiter_outreach.sent_at DESC";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("i", $recruiterId);
+    $stmt->execute();
+
+    return $stmt->get_result();
+}
 
 }
