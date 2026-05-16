@@ -21,34 +21,37 @@ if ($clientId > 0) {
     }
 }
 
+$employers = $recruiter->getEmployersForClient();
+
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $data = [
-        "company_name" => trim($_POST['company_name'] ?? ""),
-        "contact_person" => trim($_POST['contact_person'] ?? ""),
-        "email" => trim($_POST['email'] ?? ""),
-        "phone" => trim($_POST['phone'] ?? ""),
-        "industry" => trim($_POST['industry'] ?? ""),
-        "address" => trim($_POST['address'] ?? "")
-    ];
+    $companyNameOverride = trim($_POST['company_name_override'] ?? "");
 
-    if (empty($data['company_name'])) {
-        $error = "Company name is required.";
-    } else {
-        if ($clientId > 0) {
-            if ($recruiter->updateClient($clientId, $recruiterId, $data)) {
-                header("Location: clients.php?message=Client updated successfully");
-                exit;
-            }
-        } else {
-            if ($recruiter->createClient($recruiterId, $data)) {
-                header("Location: clients.php?message=Client added successfully");
-                exit;
-            }
+    if ($clientId > 0) {
+        if ($recruiter->updateClient($clientId, $recruiterId, $companyNameOverride)) {
+            header("Location: clients.php?message=Client updated successfully");
+            exit;
         }
 
-        $error = "Failed to save client.";
+        $error = "Failed to update client.";
+    } else {
+        $employerId = isset($_POST['employer_id']) ? (int)$_POST['employer_id'] : 0;
+
+        if ($employerId <= 0) {
+            $error = "Please select an employer company.";
+        } else {
+            $result = $recruiter->createClient($recruiterId, $employerId, $companyNameOverride);
+
+            if ($result === "already_exists") {
+                $error = "This employer is already added as your client.";
+            } elseif ($result) {
+                header("Location: clients.php?message=Client added successfully");
+                exit;
+            } else {
+                $error = "Failed to add client.";
+            }
+        }
     }
 }
 ?>
@@ -56,7 +59,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Client Form</title>
+    <title><?php echo $clientId > 0 ? "Edit Client" : "Add Client"; ?></title>
     <link rel="stylesheet" href="../../../public/css/recruiter.css">
 </head>
 <body>
@@ -77,7 +80,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     </aside>
 
     <main class="main-content">
-        <h1><?php echo $clientId > 0 ? "Edit Client" : "Add Client"; ?></h1>
+        <h1><?php echo $clientId > 0 ? "Edit Client Company" : "Add Client Company"; ?></h1>
 
         <?php if (!empty($error)) { ?>
             <div class="alert-error"><?php echo htmlspecialchars($error); ?></div>
@@ -85,25 +88,40 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 
         <div class="form-box">
             <form method="POST" action="">
-                <label>Company Name</label>
-                <input type="text" name="company_name" value="<?php echo htmlspecialchars($client['company_name'] ?? ''); ?>" required>
+                <?php if ($clientId > 0) { ?>
+                    <label>Employer Account</label>
+                    <input 
+                        type="text" 
+                        value="<?php echo htmlspecialchars($client['employer_name'] . ' — ' . $client['employer_email']); ?>" 
+                        disabled
+                    >
+                <?php } else { ?>
+                    <label>Select Employer Company</label>
+                    <select name="employer_id" required>
+                        <option value="">Select Employer</option>
 
-                <label>Contact Person</label>
-                <input type="text" name="contact_person" value="<?php echo htmlspecialchars($client['contact_person'] ?? ''); ?>">
+                        <?php while ($employer = $employers->fetch_assoc()) { ?>
+                            <option value="<?php echo $employer['id']; ?>">
+                                <?php echo htmlspecialchars($employer['name']); ?>
+                                —
+                                <?php echo htmlspecialchars($employer['email']); ?>
+                            </option>
+                        <?php } ?>
+                    </select>
+                <?php } ?>
 
-                <label>Email</label>
-                <input type="email" name="email" value="<?php echo htmlspecialchars($client['email'] ?? ''); ?>">
+                <label>Company Name Override Optional</label>
+                <input 
+                    type="text" 
+                    name="company_name_override" 
+                    value="<?php echo htmlspecialchars($client['company_name_override'] ?? ''); ?>" 
+                    placeholder="Example: ABC Software Ltd."
+                >
 
-                <label>Phone</label>
-                <input type="text" name="phone" value="<?php echo htmlspecialchars($client['phone'] ?? ''); ?>">
+                <button type="submit">
+                    <?php echo $clientId > 0 ? "Update Client" : "Add Client"; ?>
+                </button>
 
-                <label>Industry</label>
-                <input type="text" name="industry" value="<?php echo htmlspecialchars($client['industry'] ?? ''); ?>">
-
-                <label>Address</label>
-                <textarea name="address"><?php echo htmlspecialchars($client['address'] ?? ''); ?></textarea>
-
-                <button type="submit">Save Client</button>
                 <a href="clients.php" class="btn btn-secondary">Back</a>
             </form>
         </div>
