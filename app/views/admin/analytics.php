@@ -20,6 +20,7 @@ $userGrowth = $admin->getUserGrowthByRole();
 <html>
 <head>
     <title>Analytics - Admin Panel</title>
+    
     <link rel="stylesheet" href="../../../public/css/style.css">
     <link rel="stylesheet" href="../../../public/css/admin.css">
 
