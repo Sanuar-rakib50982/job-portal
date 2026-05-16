@@ -275,5 +275,95 @@ public function updateApplicationStatus($applicationId, $recruiterId, $status) {
 
     return $stmt->execute();
 }
+public function searchSeekers($keyword = "", $skills = "", $location = "", $experience = "") {
+    $sql = "SELECT users.id, users.name, users.email, users.phone, users.profile_pic,
+                   seeker_profiles.headline,
+                   seeker_profiles.summary,
+                   seeker_profiles.skills,
+                   seeker_profiles.years_experience,
+                   seeker_profiles.education_level,
+                   seeker_profiles.current_salary,
+                   seeker_profiles.expected_salary,
+                   seeker_profiles.preferred_location,
+                   seeker_profiles.resume_path
+            FROM users
+            LEFT JOIN seeker_profiles ON users.id = seeker_profiles.user_id
+            WHERE users.role = 'seeker'
+            AND users.is_active = 1";
+
+    $params = [];
+    $types = "";
+
+    if (!empty($keyword)) {
+        $sql .= " AND (
+                    users.name LIKE ?
+                    OR users.email LIKE ?
+                    OR seeker_profiles.headline LIKE ?
+                    OR seeker_profiles.summary LIKE ?
+                 )";
+
+        $keywordTerm = "%" . $keyword . "%";
+        $params[] = $keywordTerm;
+        $params[] = $keywordTerm;
+        $params[] = $keywordTerm;
+        $params[] = $keywordTerm;
+        $types .= "ssss";
+    }
+
+    if (!empty($skills)) {
+        $sql .= " AND seeker_profiles.skills LIKE ?";
+        $skillsTerm = "%" . $skills . "%";
+        $params[] = $skillsTerm;
+        $types .= "s";
+    }
+
+    if (!empty($location)) {
+        $sql .= " AND seeker_profiles.preferred_location LIKE ?";
+        $locationTerm = "%" . $location . "%";
+        $params[] = $locationTerm;
+        $types .= "s";
+    }
+
+    if ($experience !== "") {
+        $sql .= " AND seeker_profiles.years_experience >= ?";
+        $params[] = (int)$experience;
+        $types .= "i";
+    }
+
+    $sql .= " ORDER BY users.name ASC";
+
+    $stmt = $this->conn->prepare($sql);
+
+    if (!empty($params)) {
+        $stmt->bind_param($types, ...$params);
+    }
+
+    $stmt->execute();
+
+    return $stmt->get_result();
+}
+
+public function getSeekerProfileById($seekerId) {
+    $sql = "SELECT users.id, users.name, users.email, users.phone, users.profile_pic,
+                   seeker_profiles.headline,
+                   seeker_profiles.summary,
+                   seeker_profiles.skills,
+                   seeker_profiles.years_experience,
+                   seeker_profiles.education_level,
+                   seeker_profiles.current_salary,
+                   seeker_profiles.expected_salary,
+                   seeker_profiles.preferred_location,
+                   seeker_profiles.resume_path
+            FROM users
+            LEFT JOIN seeker_profiles ON users.id = seeker_profiles.user_id
+            WHERE users.id = ?
+            AND users.role = 'seeker'";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("i", $seekerId);
+    $stmt->execute();
+
+    return $stmt->get_result()->fetch_assoc();
+}
 
 }
