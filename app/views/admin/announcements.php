@@ -6,7 +6,6 @@ require_once "../../config/database.php";
 require_once "../../controllers/AdminController.php";
 
 $admin = new AdminController($conn);
-
 $message = "";
 $error = "";
 
