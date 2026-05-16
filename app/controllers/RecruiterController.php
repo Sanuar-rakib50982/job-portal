@@ -123,4 +123,103 @@ public function deleteClient($clientId, $recruiterId) {
     return $stmt->execute();
 }
 
+public function getCategories() {
+    $sql = "SELECT id, name FROM categories ORDER BY name ASC";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->execute();
+
+    return $stmt->get_result();
+}
+
+public function getRecruiterJobs($recruiterId) {
+    $sql = "SELECT jobs.*, categories.name AS category_name
+            FROM jobs
+            LEFT JOIN categories ON jobs.category_id = categories.id
+            WHERE jobs.recruiter_id = ?
+            ORDER BY jobs.created_at DESC";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("i", $recruiterId);
+    $stmt->execute();
+
+    return $stmt->get_result();
+}
+
+public function getJobById($jobId, $recruiterId) {
+    $sql = "SELECT * FROM jobs WHERE id = ? AND recruiter_id = ?";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("ii", $jobId, $recruiterId);
+    $stmt->execute();
+
+    return $stmt->get_result()->fetch_assoc();
+}
+
+public function createJob($recruiterId, $data) {
+    $sql = "INSERT INTO jobs
+            (employer_id, recruiter_id, category_id, title, description, requirements, benefits,
+             salary_min, salary_max, location, job_type, experience_level, deadline, status)
+            VALUES (NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active')";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param(
+        "iissssddssss",
+        $recruiterId,
+        $data['category_id'],
+        $data['title'],
+        $data['description'],
+        $data['requirements'],
+        $data['benefits'],
+        $data['salary_min'],
+        $data['salary_max'],
+        $data['location'],
+        $data['job_type'],
+        $data['experience_level'],
+        $data['deadline']
+    );
+
+    return $stmt->execute();
+}
+
+public function updateJob($jobId, $recruiterId, $data) {
+    $sql = "UPDATE jobs
+            SET category_id = ?, title = ?, description = ?, requirements = ?, benefits = ?,
+                salary_min = ?, salary_max = ?, location = ?, job_type = ?, experience_level = ?,
+                deadline = ?
+            WHERE id = ? AND recruiter_id = ?";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param(
+        "issssddssssii",
+        $data['category_id'],
+        $data['title'],
+        $data['description'],
+        $data['requirements'],
+        $data['benefits'],
+        $data['salary_min'],
+        $data['salary_max'],
+        $data['location'],
+        $data['job_type'],
+        $data['experience_level'],
+        $data['deadline'],
+        $jobId,
+        $recruiterId
+    );
+
+    return $stmt->execute();
+}
+
+public function updateJobStatus($jobId, $recruiterId, $status) {
+    $allowed = ['active', 'closed'];
+
+    if (!in_array($status, $allowed)) {
+        return false;
+    }
+
+    $sql = "UPDATE jobs SET status = ? WHERE id = ? AND recruiter_id = ?";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("sii", $status, $jobId, $recruiterId);
+
+    return $stmt->execute();
+}
+
 }
