@@ -1,4 +1,5 @@
 <?php
+
 require_once "../../app/helpers/auth.php";
 requireRole('admin');
 
@@ -43,4 +44,5 @@ echo json_encode([
     "is_featured" => $result,
     "message" => $result ? "Job marked as featured" : "Job removed from featured list"
 ]);
+
 exit;
