@@ -18,3 +18,8 @@ Thumbs.db
 
 # VS Code
 .vscode/
+public/uploads/*
+!public/uploads/.gitkeep
+!public/uploads/company_logos/.gitkeep
+!public/uploads/resumes/.gitkeep
+!public/uploads/profile_pics/.gitkeep
