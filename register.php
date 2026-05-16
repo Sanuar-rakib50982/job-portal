@@ -40,47 +40,84 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Register - Job Portal</title>
-    <link rel="stylesheet" href="public/css/style.css">
+    <title>Register - CareerBridge</title>
+    <link rel="stylesheet" href="public/css/auth.css">
 </head>
-<body>
+<body class="auth-page">
 
-<h1>Register</h1>
+<nav class="navbar">
+    <a href="index.php" class="brand">
+        <span class="brand-mark">CB</span>
+        <span>CareerBridge</span>
+    </a>
 
-<?php if (!empty($error)) { ?>
-    <p style="color:red;"><?php echo $error; ?></p>
-<?php } ?>
+    <div class="nav-links">
+        <a href="index.php">Home</a>
+        <a href="login.php" class="nav-btn">Login</a>
+    </div>
+</nav>
 
-<?php if (!empty($success)) { ?>
-    <p style="color:green;"><?php echo $success; ?></p>
-<?php } ?>
+<div class="auth-wrapper">
+    <div class="auth-card large">
+        <h1>Create Account</h1>
+        <p>Join CareerBridge as a job seeker, employer, or recruiter.</p>
 
-<form method="POST" action="">
-    <label>Name</label>
-    <input type="text" name="name" required>
+        <?php
+        $displayError = $error ?? $registerError ?? "";
+        $displaySuccess = $success ?? $message ?? "";
+        ?>
 
-    <label>Email</label>
-    <input type="email" name="email" required>
+        <?php if (!empty($displayError)) { ?>
+            <div class="alert-error"><?php echo htmlspecialchars($displayError); ?></div>
+        <?php } ?>
 
-    <label>Phone</label>
-    <input type="text" name="phone">
+        <?php if (!empty($displaySuccess)) { ?>
+            <div class="alert-success"><?php echo htmlspecialchars($displaySuccess); ?></div>
+        <?php } ?>
 
-    <label>Password</label>
-    <input type="password" name="password" required>
+        <form method="POST" action="">
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" name="name" placeholder="Enter your full name" required>
+            </div>
 
-    <label>Role</label>
-    <select name="role" required>
-        <option value="">Select Role</option>
-        <option value="seeker">Job Seeker</option>
-        <option value="employer">Employer</option>
-        <option value="recruiter">Recruiter</option>
-    </select>
+            <div class="form-group">
+                <label>Email Address</label>
+                <input type="email" name="email" placeholder="Enter your email" required>
+            </div>
 
-    <button type="submit">Register</button>
-</form>
+            <div class="form-group">
+                <label>Phone Number</label>
+                <input type="text" name="phone" placeholder="Enter your phone number">
+            </div>
 
-<a href="login.php">Already have an account? Login</a>
-<a href="index.php">Back to Home</a>
+            <div class="form-group">
+                <label>Select Role</label>
+                <select name="role" required>
+                    <option value="">Choose your role</option>
+                    <option value="seeker">Job Seeker</option>
+                    <option value="employer">Employer</option>
+                    <option value="recruiter">Recruiter</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" name="password" placeholder="Create a password" required>
+            </div>
+
+            <button type="submit" class="auth-submit">Create Account</button>
+        </form>
+
+        <div class="auth-footer">
+            Already have an account? <a href="login.php">Login here</a>
+        </div>
+    </div>
+</div>
+
+<footer class="footer">
+    © <?php echo date('Y'); ?> CareerBridge Job Portal.
+</footer>
 
 </body>
 </html>
