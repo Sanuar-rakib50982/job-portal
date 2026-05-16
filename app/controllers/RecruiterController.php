@@ -7,55 +7,53 @@ class RecruiterController {
         $this->conn = $conn;
     }
 
-    public function getProfile($recruiterId) {
-        $sql = "SELECT * FROM recruiter_profiles WHERE user_id = ?";
-        $stmt = $this->conn->prepare($sql);
-        $stmt->bind_param("i", $recruiterId);
-        $stmt->execute();
 
-        return $stmt->get_result()->fetch_assoc();
-    }
+     public function getProfile($recruiterId) {
+    $sql = "SELECT * FROM recruiter_profiles WHERE user_id = ?";
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("i", $recruiterId);
+    $stmt->execute();
 
-    public function saveProfile($recruiterId, $data) {
-        $profile = $this->getProfile($recruiterId);
+    return $stmt->get_result()->fetch_assoc();
+}
 
-        if ($profile) {
-            $sql = "UPDATE recruiter_profiles
-                    SET agency_name = ?, specialization = ?, experience_years = ?, bio = ?, website = ?
-                    WHERE user_id = ?";
+public function saveProfile($recruiterId, $data) {
+    $profile = $this->getProfile($recruiterId);
 
-            $stmt = $this->conn->prepare($sql);
-            $stmt->bind_param(
-                "ssissi",
-                $data['agency_name'],
-                $data['specialization'],
-                $data['experience_years'],
-                $data['bio'],
-                $data['website'],
-                $recruiterId
-            );
-
-            return $stmt->execute();
-        }
-
-        $sql = "INSERT INTO recruiter_profiles
-                (user_id, agency_name, specialization, experience_years, bio, website)
-                VALUES (?, ?, ?, ?, ?, ?)";
+    if ($profile) {
+        $sql = "UPDATE recruiter_profiles
+                SET agency_name = ?, specialization = ?, description = ?, website = ?
+                WHERE user_id = ?";
 
         $stmt = $this->conn->prepare($sql);
         $stmt->bind_param(
-            "ississ",
-            $recruiterId,
+            "ssssi",
             $data['agency_name'],
             $data['specialization'],
-            $data['experience_years'],
-            $data['bio'],
-            $data['website']
+            $data['description'],
+            $data['website'],
+            $recruiterId
         );
 
         return $stmt->execute();
     }
 
+    $sql = "INSERT INTO recruiter_profiles
+            (user_id, agency_name, specialization, description, website)
+            VALUES (?, ?, ?, ?, ?)";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param(
+        "issss",
+        $recruiterId,
+        $data['agency_name'],
+        $data['specialization'],
+        $data['description'],
+        $data['website']
+    );
+
+    return $stmt->execute();
+}
     public function getClients($recruiterId) {
     $sql = "SELECT * FROM recruiter_clients WHERE recruiter_id = ? ORDER BY created_at DESC";
     $stmt = $this->conn->prepare($sql);

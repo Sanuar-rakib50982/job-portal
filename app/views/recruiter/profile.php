@@ -1,4 +1,8 @@
 <?php
+ini_set('display_errors', 1);
+ini_set('display_startup_errors', 1);
+error_reporting(E_ALL);
+
 require_once "../../helpers/auth.php";
 requireRole('recruiter');
 
@@ -14,13 +18,12 @@ $message = "";
 $error = "";
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
-    $data = [
-        "agency_name" => trim($_POST['agency_name'] ?? ""),
-        "specialization" => trim($_POST['specialization'] ?? ""),
-        "experience_years" => (int)($_POST['experience_years'] ?? 0),
-        "bio" => trim($_POST['bio'] ?? ""),
-        "website" => trim($_POST['website'] ?? "")
-    ];
+   $data = [
+    "agency_name" => trim($_POST['agency_name'] ?? ""),
+    "specialization" => trim($_POST['specialization'] ?? ""),
+    "description" => trim($_POST['description'] ?? ""),
+    "website" => trim($_POST['website'] ?? "")
+];
 
     if (empty($data['agency_name'])) {
         $error = "Agency name is required.";
@@ -78,11 +81,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 <label>Specialization</label>
                 <input type="text" name="specialization" value="<?php echo htmlspecialchars($profile['specialization'] ?? ''); ?>" placeholder="Example: IT, Banking, Marketing">
 
-                <label>Years of Experience</label>
-                <input type="number" name="experience_years" min="0" value="<?php echo htmlspecialchars($profile['experience_years'] ?? '0'); ?>">
-
-                <label>Bio</label>
-                <textarea name="bio"><?php echo htmlspecialchars($profile['bio'] ?? ''); ?></textarea>
+                <label>Description</label>
+                <textarea name="description"><?php echo htmlspecialchars($profile['description'] ?? ''); ?></textarea>
 
                 <label>Website</label>
                 <input type="text" name="website" value="<?php echo htmlspecialchars($profile['website'] ?? ''); ?>" placeholder="https://example.com">
