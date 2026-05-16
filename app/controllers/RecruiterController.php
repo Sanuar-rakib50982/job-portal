@@ -222,4 +222,58 @@ public function updateJobStatus($jobId, $recruiterId, $status) {
     return $stmt->execute();
 }
 
+public function getRecruiterApplications($recruiterId) {
+    $sql = "SELECT applications.id AS application_id,
+                   applications.cover_letter,
+                   applications.resume_path AS application_resume,
+                   applications.status,
+                   applications.applied_at,
+                   jobs.id AS job_id,
+                   jobs.title AS job_title,
+                   jobs.location,
+                   jobs.job_type,
+                   jobs.experience_level,
+                   users.id AS seeker_id,
+                   users.name AS seeker_name,
+                   users.email AS seeker_email,
+                   users.phone AS seeker_phone,
+                   seeker_profiles.headline,
+                   seeker_profiles.skills,
+                   seeker_profiles.years_experience,
+                   seeker_profiles.education_level,
+                   seeker_profiles.preferred_location,
+                   seeker_profiles.resume_path AS profile_resume
+            FROM applications
+            INNER JOIN jobs ON applications.job_id = jobs.id
+            INNER JOIN users ON applications.seeker_id = users.id
+            LEFT JOIN seeker_profiles ON users.id = seeker_profiles.user_id
+            WHERE jobs.recruiter_id = ? OR applications.recruiter_id = ?
+            ORDER BY applications.applied_at DESC";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("ii", $recruiterId, $recruiterId);
+    $stmt->execute();
+
+    return $stmt->get_result();
+}
+
+public function updateApplicationStatus($applicationId, $recruiterId, $status) {
+    $allowedStatuses = ['submitted', 'reviewed', 'shortlisted', 'interview', 'rejected'];
+
+    if (!in_array($status, $allowedStatuses)) {
+        return false;
+    }
+
+    $sql = "UPDATE applications
+            INNER JOIN jobs ON applications.job_id = jobs.id
+            SET applications.status = ?
+            WHERE applications.id = ?
+            AND (jobs.recruiter_id = ? OR applications.recruiter_id = ?)";
+
+    $stmt = $this->conn->prepare($sql);
+    $stmt->bind_param("siii", $status, $applicationId, $recruiterId, $recruiterId);
+
+    return $stmt->execute();
+}
+
 }
